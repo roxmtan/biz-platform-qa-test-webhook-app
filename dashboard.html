@@ -23,7 +23,7 @@
     .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; overflow: hidden; }
     .card-header { padding: 16px 20px; border-bottom: 1px solid #e4e6eb; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
     .card-body { padding: 20px; }
-    .server-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .server-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
     .server-card { border: 1px solid #e4e6eb; border-radius: 8px; padding: 16px; }
     .server-card.up { border-left: 4px solid #00c853; }
     .server-card.down { border-left: 4px solid #ff1744; }
@@ -43,17 +43,14 @@
     .badge-green { background: #e8f5e9; color: #2e7d32; }
     .badge-red { background: #ffebee; color: #c62828; }
     .badge-blue { background: #e3f2fd; color: #1565c0; }
+    .badge-purple { background: #f3e5f5; color: #6a1b9a; }
     .search-bar { width: 100%; padding: 10px 14px; border: 1px solid #e4e6eb; border-radius: 6px; font-size: 14px; margin-bottom: 16px; }
     .search-bar:focus { outline: none; border-color: #0064E0; }
     .empty-state { text-align: center; padding: 40px; color: #65676b; }
     .refresh-btn { font-size: 12px; cursor: pointer; color: #0064E0; background: none; border: none; }
-    .settings-form { max-width: 500px; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
-    .form-group input { width: 100%; padding: 8px 12px; border: 1px solid #e4e6eb; border-radius: 6px; font-size: 14px; }
-    .form-group input:focus { outline: none; border-color: #0064E0; }
-    .server-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #e4e6eb; border-radius: 6px; margin-bottom: 8px; }
     .auto-refresh { font-size: 12px; color: #65676b; }
+    .info-box { background: #f0f7ff; border: 1px solid #cce0ff; border-radius: 8px; padding: 16px; margin-bottom: 16px; font-size: 13px; }
+    .info-box code { background: #e4e6eb; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
   </style>
 </head>
 <body>
@@ -65,12 +62,12 @@
     <div class="tab active" data-tab="status">Status</div>
     <div class="tab" data-tab="logs">Logs</div>
     <div class="tab" data-tab="history">History</div>
-    <div class="tab" data-tab="settings">Settings</div>
+    <div class="tab" data-tab="info">Setup</div>
   </div>
   <div class="content">
     <div id="status" class="panel active">
       <div class="card">
-        <div class="card-header">Server Status <button class="refresh-btn" id="refreshStatusBtn">Refresh</button></div>
+        <div class="card-header">App Status <button class="refresh-btn" id="refreshStatusBtn">Refresh</button></div>
         <div class="card-body"><div id="serverGrid" class="server-grid"><div class="empty-state">Loading...</div></div></div>
       </div>
     </div>
@@ -79,14 +76,16 @@
         <div class="card-header">
           <span>Webhook Logs</span>
           <div>
-            <select id="serverSelect" style="padding:6px;border-radius:6px;border:1px solid #e4e6eb;margin-right:8px;font-size:13px;"></select>
+            <select id="appSelect" style="padding:6px;border-radius:6px;border:1px solid #e4e6eb;margin-right:8px;font-size:13px;">
+              <option value="all">All Apps</option>
+            </select>
             <button class="btn btn-sm btn-primary" id="refreshLogsBtn">Refresh</button>
             <span class="auto-refresh"> Auto-refresh: 30s</span>
           </div>
         </div>
         <div class="card-body">
-          <input type="text" class="search-bar" id="logSearch" placeholder="Search logs (phone number, message, event type...)">
-          <div id="logList"><div class="empty-state">Select a server and click Refresh</div></div>
+          <input type="text" class="search-bar" id="logSearch" placeholder="Search logs (phone number, message, app name, event type...)">
+          <div id="logList"><div class="empty-state">Loading logs...</div></div>
         </div>
       </div>
     </div>
@@ -94,41 +93,37 @@
       <div class="card">
         <div class="card-header">Permanent Webhook History (Google Sheets)</div>
         <div class="card-body">
-          <p style="margin-bottom:16px;">Webhook payloads are permanently stored in Google Sheets.</p>
+          <p style="margin-bottom:16px;">All webhook payloads from all apps are permanently stored in Google Sheets.</p>
           <a href="https://docs.google.com/spreadsheets/d/1pw-F4SUlMq1FLCsEgH6pM_FxTInW-MN7F0oB37zmgIU/edit#gid=0" target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-block;">Open Google Sheet</a>
-          <div style="margin-top:24px;">
-            <h3 style="font-size:15px;margin-bottom:8px;">How it works:</h3>
-            <ul style="font-size:14px;color:#65676b;line-height:1.8;padding-left:20px;">
-              <li>Every webhook payload is logged to the Google Sheet via Apps Script</li>
-              <li>Logs persist permanently (survives server restarts)</li>
-              <li>Use Sheet filters to search by date, phone number, event type</li>
-              <li>Share the Sheet with your QA team for direct access</li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>
-    <div id="settings" class="panel">
+    <div id="info" class="panel">
       <div class="card">
-        <div class="card-header">Manage Webhook Servers</div>
+        <div class="card-header">Setup Guide</div>
         <div class="card-body">
-          <div class="settings-form">
-            <div class="form-group"><label>Server Name</label><input type="text" id="newServerName" placeholder="e.g., WA Echo Bot - Production"></div>
-            <div class="form-group"><label>Server URL (must have /logs endpoint)</label><input type="text" id="newServerUrl" placeholder="e.g., https://my-app.onrender.com"></div>
-            <button class="btn btn-primary" id="addServerBtn">+ Add Server</button>
+          <div class="info-box">
+            <strong>To add a new app:</strong> Just point its webhook URL in Meta Developer Portal to:<br><br>
+            <code>https://qa-test-webhook-app.onrender.com/webhook/YOUR_APP_NAME</code><br><br>
+            Example: <code>/webhook/appqa5</code>, <code>/webhook/calling</code>, <code>/webhook/partners</code><br><br>
+            No code changes needed! The app appears automatically in this dashboard.
           </div>
-          <div id="serverList" style="margin-top:16px;"></div>
+          <h3 style="font-size:15px;margin:16px 0 8px;">Available URLs</h3>
+          <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <tr style="border-bottom:1px solid #e4e6eb;"><td style="padding:8px;"><strong>Dashboard</strong></td><td><code>/dashboard</code></td></tr>
+            <tr style="border-bottom:1px solid #e4e6eb;"><td style="padding:8px;"><strong>All Logs (JSON)</strong></td><td><code>/logs</code></td></tr>
+            <tr style="border-bottom:1px solid #e4e6eb;"><td style="padding:8px;"><strong>App Logs (JSON)</strong></td><td><code>/logs/appqa1</code></td></tr>
+            <tr style="border-bottom:1px solid #e4e6eb;"><td style="padding:8px;"><strong>Live View (all)</strong></td><td><code>/logs/live</code></td></tr>
+            <tr style="border-bottom:1px solid #e4e6eb;"><td style="padding:8px;"><strong>Live View (app)</strong></td><td><code>/logs/live/appqa1</code></td></tr>
+            <tr style="border-bottom:1px solid #e4e6eb;"><td style="padding:8px;"><strong>List Apps</strong></td><td><code>/apps</code></td></tr>
+            <tr><td style="padding:8px;"><strong>Webhook URL</strong></td><td><code>/webhook/appqa1</code></td></tr>
+          </table>
         </div>
       </div>
     </div>
   </div>
 <script>
-var DEFAULT_SERVERS = [
-  { name: "QA Test Webhook App", url: "https://qa-test-webhook-app.onrender.com" },
-  { name: "Biz Platform QA Webhook App", url: "https://biz-platform-qa-test-webhook-app.onrender.com" },
-  { name: "QA Test Webhook App-g9uv", url: "https://qa-test-webhook-app-g9uv.onrender.com" }
-];
-var servers = JSON.parse(localStorage.getItem("webhook_servers") || "null") || DEFAULT_SERVERS;
+var BASE_URL = window.location.origin;
 var allLogs = [];
 var autoRefreshTimer = null;
 
@@ -138,109 +133,75 @@ function switchTab(tabName) {
   for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove("active"); }
   for (var i = 0; i < panels.length; i++) { panels[i].classList.remove("active"); }
   document.getElementById(tabName).classList.add("active");
-  var tabNames = ["status", "logs", "history", "settings"];
+  var tabNames = ["status", "logs", "history", "info"];
   for (var i = 0; i < tabNames.length; i++) {
     if (tabNames[i] === tabName) { tabs[i].classList.add("active"); break; }
   }
   if (tabName === "status") refreshStatus();
-  if (tabName === "logs") { populateServerSelect(); loadLogs(); }
-  if (tabName === "settings") renderServerList();
-}
-
-function saveServers() { localStorage.setItem("webhook_servers", JSON.stringify(servers)); }
-
-function addServer() {
-  var name = document.getElementById("newServerName").value.trim();
-  var url = document.getElementById("newServerUrl").value.trim().replace(/\/$/, "");
-  if (!name || !url) { alert("Please fill in both fields"); return; }
-  servers.push({ name: name, url: url });
-  saveServers();
-  document.getElementById("newServerName").value = "";
-  document.getElementById("newServerUrl").value = "";
-  renderServerList();
-}
-
-function removeServer(idx) {
-  if (confirm("Remove " + servers[idx].name + "?")) {
-    servers.splice(idx, 1);
-    saveServers();
-    renderServerList();
-  }
-}
-
-function renderServerList() {
-  var el = document.getElementById("serverList");
-  if (!servers.length) { el.innerHTML = "<div class=\"empty-state\">No servers configured</div>"; return; }
-  var html = "<h3 style=\"font-size:15px;margin-bottom:12px;\">Configured Servers</h3>";
-  for (var i = 0; i < servers.length; i++) {
-    html += "<div class=\"server-list-item\"><div><strong>" + servers[i].name + "</strong><br><span style=\"font-size:12px;color:#65676b;\">" + servers[i].url + "</span></div>";
-    html += "<button class=\"btn btn-sm btn-secondary\" onclick=\"removeServer(" + i + ")\">Remove</button></div>";
-  }
-  el.innerHTML = html;
+  if (tabName === "logs") { populateAppSelect(); loadLogs(); }
 }
 
 function refreshStatus() {
   var grid = document.getElementById("serverGrid");
-  grid.innerHTML = "<div class=\"empty-state\">Checking servers...</div>";
-  var done = 0;
-  var results = [];
-  for (var i = 0; i < servers.length; i++) {
-    (function(s, idx) {
-      fetch(s.url + "/logs?limit=1")
-        .then(function(res) { return res.json(); })
-        .then(function(data) { results[idx] = { name: s.name, url: s.url, up: true, stored: data.total_stored }; })
-        .catch(function() { results[idx] = { name: s.name, url: s.url, up: false, stored: 0 }; })
-        .finally(function() {
-          done++;
-          if (done === servers.length) renderStatusGrid(results);
-        });
-    })(servers[i], i);
-  }
+  grid.innerHTML = "<div class=\"empty-state\">Checking apps...</div>";
+  fetch(BASE_URL + "/apps")
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var apps = data.apps || [];
+      if (!apps.length) {
+        grid.innerHTML = "<div class=\"empty-state\">No apps registered yet. Send a webhook to /webhook/appqa1 to get started!</div>";
+        document.getElementById("globalStatus").innerHTML = "<span class=\"status-dot unknown\"></span> No apps yet";
+        return;
+      }
+      var html = "";
+      for (var i = 0; i < apps.length; i++) {
+        var a = apps[i];
+        html += "<div class=\"server-card up\">";
+        html += "<h3>" + a.name + "</h3>";
+        html += "<span class=\"badge badge-green\">Active</span>";
+        html += "<div class=\"meta\" style=\"margin-top:8px;\">";
+        html += "Logs stored: " + a.total_stored;
+        if (a.latest) html += "<br>Latest: " + a.latest.replace('T',' ').slice(0,19);
+        html += "<br><a href=\"/logs/" + a.name + "\" target=\"_blank\" style=\"font-size:12px;\">View JSON</a>";
+        html += " | <a href=\"/logs/live/" + a.name + "\" target=\"_blank\" style=\"font-size:12px;\">Live View</a>";
+        html += "</div></div>";
+      }
+      grid.innerHTML = html;
+      document.getElementById("globalStatus").innerHTML = "<span class=\"status-dot up\"></span> " + apps.length + " app(s) active";
+    })
+    .catch(function() {
+      grid.innerHTML = "<div class=\"empty-state\">Could not reach server</div>";
+      document.getElementById("globalStatus").innerHTML = "<span class=\"status-dot down\"></span> Server offline";
+    });
 }
 
-function renderStatusGrid(results) {
-  var grid = document.getElementById("serverGrid");
-  var html = "";
-  var allUp = true;
-  for (var i = 0; i < results.length; i++) {
-    var r = results[i];
-    if (!r.up) allUp = false;
-    html += "<div class=\"server-card " + (r.up ? "up" : "down") + "\">";
-    html += "<h3>" + r.name + "</h3>";
-    html += "<span class=\"badge " + (r.up ? "badge-green\">Online" : "badge-red\">Offline") + "</span>";
-    html += "<div class=\"meta\" style=\"margin-top:8px;\">";
-    html += r.up ? "Logs stored: " + r.stored : "Server not responding";
-    html += "<br><a href=\"" + r.url + "/logs\" target=\"_blank\" style=\"font-size:12px;\">Open /logs</a></div></div>";
-  }
-  grid.innerHTML = html;
-  var dot = allUp ? "up" : "down";
-  var label = allUp ? "All servers online" : "Some servers offline";
-  document.getElementById("globalStatus").innerHTML = "<span class=\"status-dot " + dot + "\"></span> " + label;
-}
-
-function populateServerSelect() {
-  var sel = document.getElementById("serverSelect");
-  var html = "";
-  for (var i = 0; i < servers.length; i++) {
-    html += "<option value=\"" + i + "\">" + servers[i].name + "</option>";
-  }
-  sel.innerHTML = html;
+function populateAppSelect() {
+  fetch(BASE_URL + "/apps")
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var sel = document.getElementById("appSelect");
+      var html = "<option value=\"all\">All Apps</option>";
+      var apps = data.apps || [];
+      for (var i = 0; i < apps.length; i++) {
+        html += "<option value=\"" + apps[i].name + "\">" + apps[i].name + " (" + apps[i].total_stored + ")</option>";
+      }
+      sel.innerHTML = html;
+    });
 }
 
 function loadLogs() {
-  var idx = document.getElementById("serverSelect").value || 0;
-  var server = servers[idx];
-  if (!server) return;
+  var appName = document.getElementById("appSelect").value;
   var el = document.getElementById("logList");
-  el.innerHTML = "<div class=\"empty-state\">Loading logs from " + server.name + "...</div>";
-  fetch(server.url + "/logs?limit=500")
+  el.innerHTML = "<div class=\"empty-state\">Loading...</div>";
+  var url = appName === "all" ? BASE_URL + "/logs?limit=500" : BASE_URL + "/logs/" + appName + "?limit=500";
+  fetch(url)
     .then(function(res) { return res.json(); })
     .then(function(data) {
       allLogs = data.logs || [];
       renderLogs(allLogs);
     })
     .catch(function() {
-      el.innerHTML = "<div class=\"empty-state\">Could not reach " + server.name + "</div>";
+      el.innerHTML = "<div class=\"empty-state\">Could not load logs</div>";
     });
   if (autoRefreshTimer) clearInterval(autoRefreshTimer);
   autoRefreshTimer = setInterval(loadLogs, 30000);
@@ -253,7 +214,7 @@ function toggleLogBody(el) {
 
 function renderLogs(logs) {
   var el = document.getElementById("logList");
-  if (!logs.length) { el.innerHTML = "<div class=\"empty-state\">No webhook logs yet. Send a test message!</div>"; return; }
+  if (!logs.length) { el.innerHTML = "<div class=\"empty-state\">No webhook logs yet. Point an app to /webhook/appqa1 and send a message!</div>"; return; }
   var html = "";
   for (var i = 0; i < logs.length; i++) {
     var log = logs[i];
@@ -269,9 +230,10 @@ function renderLogs(logs) {
     var from = msg ? msg.from : (st && val.metadata ? val.metadata.display_phone_number : "");
     var body = msg ? (msg.text ? msg.text.body : msg.type) : (st ? st.status : "");
     var type = msg ? "message" : (st ? "status" : field);
+    var appLabel = log.app ? "<span class=\"badge badge-purple\">" + log.app + "</span> " : "";
     html += "<div class=\"log-entry\">";
     html += "<div class=\"log-header\" onclick=\"toggleLogBody(this)\">";
-    html += "<span><span class=\"badge badge-blue\">" + type + "</span> ";
+    html += "<span>" + appLabel + "<span class=\"badge badge-blue\">" + type + "</span> ";
     if (from) html += "From: " + from + " ";
     if (body) html += "- " + body;
     html += "</span>";
@@ -297,12 +259,10 @@ document.getElementById("tabBar").addEventListener("click", function(e) {
 });
 document.getElementById("refreshStatusBtn").addEventListener("click", refreshStatus);
 document.getElementById("refreshLogsBtn").addEventListener("click", loadLogs);
-document.getElementById("addServerBtn").addEventListener("click", addServer);
 document.getElementById("logSearch").addEventListener("input", filterLogs);
-document.getElementById("serverSelect").addEventListener("change", loadLogs);
+document.getElementById("appSelect").addEventListener("change", loadLogs);
 
 refreshStatus();
-populateServerSelect();
 </script>
 </body>
 </html>
